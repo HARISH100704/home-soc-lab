@@ -9,6 +9,10 @@
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 ---
+## Dashboard Preview
+![SOC Dashboard](docs/screenshots/dashboard.png)
+
+---
 
 ## Lab Setup
 
