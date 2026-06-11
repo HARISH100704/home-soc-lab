@@ -1,0 +1,8 @@
+network.host: "0.0.0.0"
+node.name: "wazuh.indexer"
+cluster.initial_master_nodes:
+  - "wazuh.indexer"
+plugins.security.ssl.http.enabled: false
+plugins.security.ssl.transport.enforce_hostname_verification: false
+plugins.security.allow_unsafe_democertificates: true
+plugins.security.allow_default_init_securityindex: true

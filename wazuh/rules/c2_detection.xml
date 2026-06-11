@@ -1,0 +1,56 @@
+<!-- wazuh/rules/privilege_escalation.xml -->
+<group name="privilege_escalation,attack,">
+
+  <!-- sudo to root -->
+  <rule id="100010" level="12">
+    <if_sid>5402</if_sid>
+    <match>sudo</match>
+    <regex>TTY=\S+ ; PWD=\S+ ; USER=root ; COMMAND=</regex>
+    <description>Privilege escalation: sudo to root executed</description>
+    <group>pci_dss_10.2.5,gpg13_7.6,</group>
+  </rule>
+
+  <!-- New user added to sudoers -->
+  <rule id="100011" level="14">
+    <if_sid>5901</if_sid>
+    <match>sudoers</match>
+    <description>CRITICAL: User added to sudoers file</description>
+  </rule>
+
+  <!-- SUID binary created -->
+  <rule id="100012" level="13">
+    <if_sid>550</if_sid>
+    <field name="file">/usr/bin|/usr/sbin|/bin|/sbin</field>
+    <description>SUID/SGID bit set on binary — possible persistence mechanism</description>
+  </rule>
+
+</group>
+
+<!-- wazuh/rules/c2_detection.xml -->
+<group name="c2,malware,network,">
+
+  <!-- High volume outbound connections (possible C2 beaconing) -->
+  <rule id="100020" level="10" frequency="20" timeframe="60">
+    <if_matched_sid>4112</if_matched_sid>
+    <same_destination_ip/>
+    <description>Possible C2 beaconing: 20+ connections to same external IP</description>
+    <group>attack,</group>
+  </rule>
+
+  <!-- Connection to known bad port -->
+  <rule id="100021" level="12">
+    <if_sid>4112</if_sid>
+    <dstport>4444|1337|31337|6666|6667|8080|9001</dstport>
+    <description>Outbound connection to suspicious port (possible C2/backdoor)</description>
+    <group>attack,</group>
+  </rule>
+
+  <!-- PowerShell download cradle (Windows) -->
+  <rule id="100022" level="14">
+    <if_sid>92200</if_sid>
+    <match>DownloadString|IEX|Invoke-Expression|WebClient|DownloadFile</match>
+    <description>CRITICAL: PowerShell download cradle detected — possible malware download</description>
+    <group>attack,malware,windows,</group>
+  </rule>
+
+</group>

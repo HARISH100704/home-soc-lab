@@ -1,0 +1,126 @@
+%YAML 1.1
+---
+
+# Home SOC Lab — Suricata Configuration
+# Monitors your VirtualBox NAT Network
+
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+    HTTP_SERVERS: "$HOME_NET"
+    SQL_SERVERS: "$HOME_NET"
+    DNS_SERVERS: "$HOME_NET"
+    SMTP_SERVERS: "$HOME_NET"
+
+  port-groups:
+    HTTP_PORTS: "80,8080,8000,8443"
+    SHELLCODE_PORTS: "!80"
+    ORACLE_PORTS: 1521
+    SSH_PORTS: 22
+    DNP3_PORTS: 20000
+    MODBUS_PORTS: 502
+    FILE_DATA_PORTS: "[$HTTP_PORTS,110,143]"
+    FTP_PORTS: 21
+    VXLAN_PORTS: 4789
+    TEREDO_PORTS: 3544
+
+# ── Interface ────────────────────────────────────────────────
+af-packet:
+  - interface: eth0       # Change to your interface
+    cluster-id: 99
+    cluster-type: cluster_flow
+    defrag: yes
+    use-mmap: yes
+    tpacket-v3: yes
+
+# ── Outputs ─────────────────────────────────────────────────
+outputs:
+  # EVE JSON — Wazuh reads this file
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: /var/log/suricata/eve.json
+      community-id: true
+      types:
+        - alert:
+            payload: yes
+            payload-buffer-size: 4kb
+            payload-printable: yes
+            packet: yes
+            metadata: yes
+        - http:
+            extended: yes
+        - dns:
+            query: yes
+            answer: yes
+        - tls:
+            extended: yes
+        - files:
+            force-magic: no
+        - ssh
+        - flow
+        - netflow
+
+  - fast:
+      enabled: yes
+      filename: /var/log/suricata/fast.log
+      append: yes
+
+  - stats:
+      enabled: yes
+      filename: /var/log/suricata/stats.log
+      append: yes
+      totals: yes
+      threads: no
+
+# ── Detection Engine ─────────────────────────────────────────
+detect:
+  profile: medium
+  custom-values:
+    toclient-groups: 3
+    toserver-groups: 25
+  sgh-mpm-context: auto
+  inspection-recursion-limit: 3000
+
+# ── Rules ────────────────────────────────────────────────────
+default-rule-path: /var/lib/suricata/rules
+rule-files:
+  - suricata.rules           # Default Emerging Threats ruleset
+  - custom.rules             # Your custom rules
+
+# ── App Layer ────────────────────────────────────────────────
+app-layer:
+  protocols:
+    tls:
+      enabled: yes
+      detection-ports:
+        dp: 443
+    http:
+      enabled: yes
+      libhtp:
+        default-config:
+          personality: IDS
+          request-body-limit: 100kb
+          response-body-limit: 100kb
+    ftp:
+      enabled: yes
+    ssh:
+      enabled: yes
+    smtp:
+      enabled: yes
+    dns:
+      enabled: yes
+    http2:
+      enabled: yes
+
+# ── Logging ──────────────────────────────────────────────────
+logging:
+  default-log-level: notice
+  outputs:
+    - console:
+        enabled: yes
+    - file:
+        enabled: yes
+        level: info
+        filename: /var/log/suricata/suricata.log

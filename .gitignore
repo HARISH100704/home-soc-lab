@@ -1,0 +1,25 @@
+# Secrets
+.env
+*.key
+*.pem
+config.yaml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Logs & data
+*.log
+automation/data/
+
+# Docker local volumes
+volumes/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
